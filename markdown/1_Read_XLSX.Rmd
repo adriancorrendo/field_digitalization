@@ -1,0 +1,640 @@
+---
+title: "Untitled"
+output: html_document
+date: "2022-07-14"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#install.packages(c("tidyverse", "esquisse"))
+
+```
+
+```{r}
+library(tidyverse)
+library(esquisse)
+library(readxl)
+library(lubridate)
+library(readr)
+library(dplyr)
+library(patchwork)
+```
+
+```{r}
+colnames_2017 <- colnames(read.csv(file = '../data/campus_ag_dig/weather/mhk_2017.csv'))
+
+mhk_2017 <- read.delim(file = '../data/MHK_2017.txt',sep = ',',skip=3,
+                       col.names = colnames_2017) %>%
+  mutate(Timestamp = lubridate::ymd(as.character(Timestamp)),
+         AirTemperature_mean = (AirTemperature + AirTemperature.1) / 2) %>%
+  rename(date = Timestamp,
+         AirTemperature_max = AirTemperature,
+         AirTemperature_min = AirTemperature.1,
+         SoilTemperature5cm_max = SoilTemperature5cm,
+         SoilTemperature5cm_min = SoilTemperature5cm.1,
+         SoilTemperature10cm_max = SoilTemperature10cm, 
+         SoilTemperature10cm_min = SoilTemperature10cm.1,
+         ETo_grass = ETo,
+         ETo_alfalfa = ETo.1
+         )
+  
+
+head(mhk_2017)
+
+colnames(mhk_2017)
+
+```
+
+```{r}
+esquisse::esquisser()
+```
+
+## **##PLOT TEMPERATURA**
+
+```{r}
+#PLOT DE TEMPERATURA MAX MIN Y MEDIA
+
+temp_plot_2017 <-mhk_2017 %>%
+  dplyr::select(date, AirTemperature_max, AirTemperature_min, AirTemperature_mean) %>%
+  pivot_longer(cols = c(AirTemperature_max, AirTemperature_min, AirTemperature_mean),
+    names_to = "Type",
+    values_to = "Temp") %>%
+  ggplot() + 
+  geom_line(aes(x = date, y = Temp, colour=Type)) + 
+    xlab('Date') + 
+    ylab('Air Temperature (C)') + 
+    labs(title = 'Temperature -  2017',subtitle = 'Data retrieved from Kansas Mesonet', color = 'Type') 
+  
+  
+temp_plot_2017
+ggsave(filename = '../output/temp_plot_2017.png',plot = temp_plot_2017,width = 10,height = 5)
+```
+
+##PLOT PRECIPT_2017
+
+```{r}
+rainfall_plot_2017 <- ggplot(mhk_2017) + 
+  geom_col(aes(x = date, y = Precipitation)) + 
+    xlab('Date') + 
+    ylab('Precipitation (mm)') + 
+    labs(title = 'Rainfall -  2017',
+         subtitle = 'Data retrieved from Kansas Mesonet', 
+         color = 'Type') 
+  
+  
+  
+rainfall_plot_2017
+ggsave(filename = '../output/pp_plot_2017.png',plot = rainfall_plot_2017, 
+       width = 10,height = 5)
+```
+
+```{r}
+temp_plot_2018 <-mhk_2018 %>%
+  dplyr::select(date, AirTemperature_max, AirTemperature_min, AirTemperature_mean) %>%
+  pivot_longer(cols = c(AirTemperature_max, AirTemperature_min, AirTemperature_mean),
+    names_to = "Type",
+    values_to = "Temp") %>%
+  ggplot() + 
+  geom_line(aes(x = date, y = Temp, colour=Type)) + 
+    xlab('Date') + 
+    ylab('Air Temperature (C)') + 
+    labs(title = 'Temperature -  2018',subtitle = 'Data retrieved from Kansas Mesonet', color = 'Type') 
+  
+  
+temp_plot_2018
+ggsave(filename = '../output/temp_plot_2018.png',plot = temp_plot_2017,width = 10,height = 5)
+
+```
+
+```{r}
+rainfall_plot_2018 <- ggplot(mhk_2018) + 
+  geom_col(aes(x = date, y = Precipitation)) + 
+    xlab('Date') + 
+    ylab('Precipitation (mm)') + 
+    labs(title = 'Rainfall -  2018',
+         subtitle = 'Data retrieved from Kansas Mesonet', 
+         color = 'Type') 
+  
+  
+  
+rainfall_plot_2018
+ggsave(filename = '../output/pp_plot_2018.png',plot = rainfall_plot_2018, 
+       width = 10,height = 5)
+```
+
+## inicio CSV
+
+###DATA2019_bien
+
+```{r}
+#ENTRAMOS AL ARCHIVO EN LA BARRA DE LA DERECHA , ARCHIVO CLICK IZQUIERDO, IMPORT DATA SET, Y VOY PONIENDO EL TIPO DE DATO QUE CORRESPONDA EJ NUMBER, DATE, .. PRESTAR ATENCION A LOS NOMBRES DE LAS COLUMNAS Y ANOS. 
+
+colnames_2019 <- colnames(read.delim(file = '../data/mhk_2019.csv',sep = ','))
+
+mhk_2019 <- read_csv("../data/mhk_2019.csv", #NOMBRE CADA COLUMNA CON SU TIPO DE DATO CORRESPODIENTE
+    col_types = cols(Timestamp = col_character(), 
+        AirTemperature = col_double(), AirTemperature.1 = col_double(), 
+        RelativeHumidity = col_double(), 
+        Precipitation = col_double(), WindSpeed2m = col_double(), 
+        WindSpeed2m.1 = col_double(), SoilTemperature5cm = col_double(), 
+        SoilTemperature5cm.1 = col_double(), 
+        SoilTemperature10cm = col_double(), 
+        SoilTemperature10cm.1 = col_double(), 
+        SolarRadiation = col_double(), ETo = col_double(), 
+        ETo.1 = col_double())) %>%
+na.exclude() %>%
+  mutate(Timestamp = lubridate::ymd(as.character(Timestamp)),
+         AirTemperature_mean = (as.double(AirTemperature) + as.double(AirTemperature.1)) / 2) %>%
+  rename(date = Timestamp,
+         AirTemperature_max = AirTemperature,
+         AirTemperature_min = AirTemperature.1,
+         SoilTemperature5cm_max = SoilTemperature5cm,
+         SoilTemperature5cm_min = SoilTemperature5cm.1,
+         SoilTemperature10cm_max = SoilTemperature10cm, 
+         SoilTemperature10cm_min = SoilTemperature10cm.1,
+         ETo_grass = ETo,
+         ETo_alfalfa = ETo.1
+         )
+
+head(mhk_2019)
+
+colnames(mhk_2019)
+```
+
+### TEMPGRAP_2019_bien
+
+```{r}
+temp_plot2_2019 <-mhk_2019 %>%
+  dplyr::select(date, AirTemperature_max, AirTemperature_min, AirTemperature_mean) %>%
+  pivot_longer(cols = c(AirTemperature_max, AirTemperature_min, AirTemperature_mean),
+    names_to = "Type",
+    values_to = "Temp") %>%
+  ggplot() + 
+  geom_line(aes(x = date, y = Temp, colour=Type)) + 
+    xlab('Date') + 
+    ylab('Air Temperature (C)') + 
+    labs(title = 'Temperature -  2019',subtitle = 'Data retrieved from Kansas Mesonet', color = 'Type') 
+  
+  
+temp_plot2_2019
+ggsave(filename = '../output/temp_plot2_2019.png',plot = temp_plot2_2019,dpi=300,
+       width = 10,height = 5)
+
+       
+```
+
+##RAINGRAP_2019_bien
+```{r}
+rainfall_plot_2019 <- ggplot(mhk_2019) + 
+  geom_col(aes(x = date, y = Precipitation)) + 
+    xlab('Date') + 
+    ylab('Precipitation (mm)') + 
+    labs(title = 'Rainfall -  2019',
+         subtitle = 'Data retrieved from Kansas Mesonet', 
+         color = 'Type') 
+  
+  
+  
+rainfall_plot_2019
+ggsave(filename = '../output/pp_plot_2019.png',plot = rainfall_plot_2019, 
+       width = 10,height = 5)
+```
+
+
+
+
+
+##data2020_bien
+
+```{r}
+
+colnames_2020 <- colnames(read.delim(file = '../data/mhk_2020.csv',sep = ','))
+mhk_2020 <- read_csv("../data/mhk_2020.csv", 
+    col_types = cols(Timestamp = col_character(), 
+        AirTemperature...3 = col_double(), 
+        AirTemperature...4 = col_double(), 
+        RelativeHumidity = col_double(), 
+        Precipitation = col_double(), WindSpeed2m...7 = col_double(), 
+        WindSpeed2m...8 = col_double(), SoilTemperature5cm...9 = col_double(), 
+        SoilTemperature5cm...10 = col_double(), 
+        SoilTemperature10cm...11 = col_double(), 
+        SoilTemperature10cm...12 = col_double(), 
+        SolarRadiation = col_double(), ETo...14 = col_double(), 
+        ETo...15 = col_double())) %>%
+na.exclude() %>%
+  mutate(Timestamp = lubridate::ymd(as.character(Timestamp)),
+         AirTemperature_mean = (as.double(AirTemperature...3) + as.double(AirTemperature...4))/2)%>%
+rename(date = Timestamp,
+         AirTemperature_max = AirTemperature...3,
+         AirTemperature_min = AirTemperature...4,
+         SoilTemperature5cm_max = SoilTemperature5cm...9,
+         SoilTemperature5cm_min = SoilTemperature5cm...10,
+         SoilTemperature10cm_max = SoilTemperature10cm...11, 
+         SoilTemperature10cm_min = SoilTemperature10cm...12,
+         ETo_grass = ETo...14,
+         ETo_alfalfa = ETo...15
+         )
+
+head(mhk_2020)
+
+colnames(mhk_2020)
+
+
+
+```
+
+##tempgrap_2020_bien
+
+```{r}
+temp_plot2_2020 <- mhk_2020 %>%
+  dplyr::select(date, AirTemperature_max, AirTemperature_min, AirTemperature_mean) %>%
+  pivot_longer(cols = c(AirTemperature_max, AirTemperature_min, AirTemperature_mean),
+    names_to = "Type",
+    values_to = "Temp") %>%
+  ggplot() + 
+  geom_line(aes(x = date, y = Temp, colour=Type)) + 
+    xlab('Date') + 
+    ylab('Air Temperature (C)') + 
+    labs(title = 'Temperature -  2020',subtitle = 'Data retrieved from Kansas Mesonet', color = 'Type') 
+  
+  
+temp_plot2_2020
+ggsave(filename = '../output/temp_plot2_2020.png',plot = temp_plot2_2020, dpi= 300,
+       width = 10, height = 5)
+
+```
+
+## RAINGRAP_2020_bien
+
+```{r}
+rainfall_plot_2020 <- ggplot(mhk_2020) + 
+  geom_col(aes(x = date, y = Precipitation)) + 
+    xlab('Date') + 
+    ylab('Precipitation (mm)') + 
+    labs(title = 'Rainfall -  2020',
+         subtitle = 'Data retrieved from Kansas Mesonet', 
+         color = 'Type') 
+  
+  
+  
+rainfall_plot_2020
+ggsave(filename = '../output/pp_plot_2020.png',plot = rainfall_plot_2020, 
+       width = 10,height = 5)
+```
+
+##DATA2021_BIEN
+
+```{r}
+colnames_2021 <- colnames(read.delim(file = '../data/mhk_2021.csv',sep = ','))
+mhk_2021 <- read_csv("../data/mhk_2021.csv", 
+    col_types = cols(Timestamp = col_character(), 
+        AirTemperature...3 = col_double(), 
+        AirTemperature...4 = col_double(), 
+        RelativeHumidity = col_double(), 
+        Precipitation = col_double(), WindSpeed2m...7 = col_double(), 
+        WindSpeed2m...8 = col_double(), SoilTemperature5cm...9 = col_double(), 
+        SoilTemperature5cm...10 = col_double(), 
+        SoilTemperature10cm...11 = col_double(), 
+        SoilTemperature10cm...12 = col_double(), 
+        SolarRadiation = col_double(), ETo...14 = col_double(), 
+        ETo...15 = col_double())) %>%
+na.exclude() %>%
+  mutate(Timestamp = lubridate::ymd(as.character(Timestamp)),
+         AirTemperature_mean = (as.double(AirTemperature...3) + as.double(AirTemperature...4))/2)%>%
+rename(date = Timestamp,
+         AirTemperature_max = AirTemperature...3,
+         AirTemperature_min = AirTemperature...4,
+         SoilTemperature5cm_max = SoilTemperature5cm...9,
+         SoilTemperature5cm_min = SoilTemperature5cm...10,
+         SoilTemperature10cm_max = SoilTemperature10cm...11, 
+         SoilTemperature10cm_min = SoilTemperature10cm...12,
+         ETo_grass = ETo...14,
+         ETo_alfalfa = ETo...15
+         )
+
+head(mhk_2021)
+
+colnames(mhk_2021)
+
+```
+
+##TEMPGRAP_2021_BIEN
+
+```{r}
+temp_plot2_2021 <- mhk_2021 %>%
+  dplyr::select(date, AirTemperature_max, AirTemperature_min, AirTemperature_mean) %>%
+  pivot_longer(cols = c(AirTemperature_max, AirTemperature_min, AirTemperature_mean),
+    names_to = "Type",
+    values_to = "Temp") %>%
+  ggplot() + 
+  geom_line(aes(x = date, y = Temp, colour=Type)) + 
+    xlab('Date') + 
+    ylab('Air Temperature (C)') + 
+    labs(title = 'Temperature -  2021',subtitle = 'Data retrieved from Kansas Mesonet', color = 'Type') 
+  
+  
+temp_plot2_2021
+ggsave(filename = '../output/temp_plot2_2021.png',plot = temp_plot2_2021, dpi= 300,
+       width = 10, height = 5)
+```
+
+##RAINGRAP_2021_BIEN
+
+```{r}
+rainfall_plot_2021 <- ggplot(mhk_2021) + 
+  geom_col(aes(x = date, y = Precipitation)) + 
+    xlab('Date') + 
+    ylab('Precipitation (mm)') + 
+    labs(title = 'Rainfall -  2021',
+         subtitle = 'Data retrieved from Kansas Mesonet', 
+         color = 'Type') 
+  
+  
+  
+rainfall_plot_2021
+ggsave(filename = '../output/pp_plot_2021.png',plot = rainfall_plot_2021, 
+       width = 10,height = 5)
+```
+
+##DATA2022_BIEN 
+
+```{r}
+colnames_2022 <- colnames(read.delim(file = '../data/mhk_2022.csv',sep = ','))
+mhk_2022 <- read_csv("../data/mhk_2022.csv", 
+    col_types = cols(Timestamp = col_character(), 
+        AirTemperature...3 = col_double(), 
+        AirTemperature...4 = col_double(), 
+        RelativeHumidity = col_double(), 
+        Precipitation = col_double(), WindSpeed2m...7 = col_double(), 
+        WindSpeed2m...8 = col_double(), SoilTemperature5cm...9 = col_double(), 
+        SoilTemperature5cm...10 = col_double(), 
+        SoilTemperature10cm...11 = col_double(), 
+        SoilTemperature10cm...12 = col_double(), 
+        SolarRadiation = col_double(), ETo...14 = col_double(), 
+        ETo...15 = col_double())) %>%
+na.exclude() %>%
+  mutate(Timestamp = lubridate::ymd(as.character(Timestamp)),
+         AirTemperature_mean = (as.double(AirTemperature...3) + as.double(AirTemperature...4))/2)%>%
+rename(date = Timestamp,
+         AirTemperature_max = AirTemperature...3,
+         AirTemperature_min = AirTemperature...4,
+         SoilTemperature5cm_max = SoilTemperature5cm...9,
+         SoilTemperature5cm_min = SoilTemperature5cm...10,
+         SoilTemperature10cm_max = SoilTemperature10cm...11, 
+         SoilTemperature10cm_min = SoilTemperature10cm...12,
+         ETo_grass = ETo...14,
+         ETo_alfalfa = ETo...15
+         )
+
+head(mhk_2022)
+
+colnames(mhk_2022)
+```
+##TEMPGRAP_2022_BIEN
+
+```{r}
+temp_plot2_2022 <- mhk_2022 %>%
+  dplyr::select(date, AirTemperature_max, AirTemperature_min, AirTemperature_mean) %>%
+  pivot_longer(cols = c(AirTemperature_max, AirTemperature_min, AirTemperature_mean),
+    names_to = "Type",
+    values_to = "Temp") %>%
+  ggplot() + 
+  geom_line(aes(x = date, y = Temp, colour=Type)) + 
+    xlab('Date') + 
+    ylab('Air Temperature (C)') + 
+    labs(title = 'Temperature -  2022',subtitle = 'Data retrieved from Kansas Mesonet', color = 'Type') 
+  
+  
+temp_plot2_2022
+ggsave(filename = '../output/temp_plot2_2022.png',plot = temp_plot2_2022, dpi= 300,
+       width = 10, height = 5)
+
+```
+## RAINGRAP_2022_BIEN
+```{r}
+rainfall_plot_2022 <- ggplot(mhk_2022) + 
+  geom_col(aes(x = date, y = Precipitation)) + 
+    xlab('Date') + 
+    ylab('Precipitation (mm)') + 
+    labs(title = 'Rainfall -  2022',
+         subtitle = 'Data retrieved from Kansas Mesonet', 
+         color = 'Type') 
+  
+  
+  
+rainfall_plot_2022
+ggsave(filename = '../output/pp_plot_2022.png',plot = rainfall_plot_2022, 
+       width = 10,height = 5)
+```
+
+##DATA2018_BIEN
+```{r}
+colnames_2018 <- colnames(read.delim(file = '../data/mhk_2018.csv',sep = ','))
+mhk_2018 <- read_csv("../data/mhk_2018.csv", 
+    col_types = cols(Timestamp = col_character(), 
+        AirTemperature = col_double(), AirTemperature.1 = col_double(), 
+        RelativeHumidity = col_double(), 
+        Precipitation = col_double(), WindSpeed2m = col_double(), 
+        WindSpeed2m.1 = col_double(), SoilTemperature5cm = col_double(), 
+        SoilTemperature5cm.1 = col_double(), 
+        SoilTemperature10cm = col_double(), 
+        SoilTemperature10cm.1 = col_double(), 
+        SolarRadiation = col_double(), ETo = col_double(), 
+        ETo.1 = col_double())) %>%
+na.exclude() %>%
+  mutate(Timestamp = lubridate::ymd(as.character(Timestamp)),
+         AirTemperature_mean = (as.double(AirTemperature) + as.double(AirTemperature.1))/2)%>%
+rename(date = Timestamp,
+         AirTemperature_max = AirTemperature,
+         AirTemperature_min = AirTemperature.1,
+         SoilTemperature5cm_max = SoilTemperature5cm,
+         SoilTemperature5cm_min = SoilTemperature5cm.1,
+         SoilTemperature10cm_max = SoilTemperature10cm, 
+         SoilTemperature10cm_min = SoilTemperature10cm.1,
+         ETo_grass = ETo,
+         ETo_alfalfa = ETo.1
+         )
+
+head(mhk_2018)
+
+colnames(mhk_2018)
+```
+
+##TEMPGRAP_2018_BIEN
+
+```{r}
+temp_plot2_2018 <- mhk_2018 %>%
+  dplyr::select(date, AirTemperature_max, AirTemperature_min, AirTemperature_mean) %>%
+  pivot_longer(cols = c(AirTemperature_max, AirTemperature_min, AirTemperature_mean),
+    names_to = "Type",
+    values_to = "Temp") %>%
+  ggplot() + 
+  geom_line(aes(x = date, y = Temp, colour=Type)) + 
+    xlab('Date') + 
+    ylab('Air Temperature (C)') + 
+    labs(title = 'Temperature -  2018',subtitle = 'Data retrieved from Kansas Mesonet', color = 'Type') 
+  
+  
+temp_plot2_2018
+ggsave(filename = '../output/temp_plot2_2018.png',plot = temp_plot2_2018, dpi= 300,
+       width = 10, height = 5)
+```
+##RANGRAP_2018_BIEN
+
+```{r}
+rainfall_plot_2018 <- ggplot(mhk_2018) + 
+  geom_col(aes(x = date, y = Precipitation)) + 
+    xlab('Date') + 
+    ylab('Precipitation (mm)') + 
+    labs(title = 'Rainfall -  2018',
+         subtitle = 'Data retrieved from Kansas Mesonet', 
+         color = 'Type') 
+  
+  
+  
+rainfall_plot_2018
+ggsave(filename = '../output/pp_plot_2018.png',plot = rainfall_plot_2018, 
+       width = 10,height = 5)
+```
+##DATA2017_BIEN
+
+```{r}
+
+colnames_2017 <- colnames(read.delim(file = '../data/mhk_2017.csv',sep = ','))
+mhk_2017 <- read_csv("../data/mhk_2017.csv", 
+    col_types = cols(Timestamp = col_character(), 
+        AirTemperature...3 = col_double(), 
+        AirTemperature...4 = col_double(), 
+        RelativeHumidity = col_double(), 
+        Precipitation = col_double(), WindSpeed2m...7 = col_double(), 
+        WindSpeed2m...8 = col_double(), SoilTemperature5cm...9 = col_double(), 
+        SoilTemperature5cm...10 = col_double(), 
+        SoilTemperature10cm...11 = col_double(), 
+        SoilTemperature10cm...12 = col_double(), 
+        SolarRadiation = col_double(), ETo...14 = col_double(), 
+        ETo...15 = col_double()))%>%
+na.exclude() %>%
+  mutate(Timestamp = lubridate::ymd(as.character(Timestamp)),
+         AirTemperature_mean = (as.double(AirTemperature...3) + as.double(AirTemperature...4))/2)%>%
+rename(date = Timestamp,
+         AirTemperature_max = AirTemperature...3,
+         AirTemperature_min = AirTemperature...4,
+         SoilTemperature5cm_max = SoilTemperature5cm...9,
+         SoilTemperature5cm_min = SoilTemperature5cm...10,
+         SoilTemperature10cm_max = SoilTemperature10cm...11, 
+         SoilTemperature10cm_min = SoilTemperature10cm...12,
+         ETo_grass = ETo...14,
+         ETo_alfalfa = ETo...15
+         )
+
+head(mhk_2017)
+
+colnames(mhk_2017)
+```
+##TEMP2017_BIEN
+```{r}
+temp_plot2_2017 <- mhk_2017 %>%
+  dplyr::select(date, AirTemperature_max, AirTemperature_min, AirTemperature_mean) %>%
+  pivot_longer(cols = c(AirTemperature_max, AirTemperature_min, AirTemperature_mean),
+    names_to = "Type",
+    values_to = "Temp") %>%
+  ggplot() + 
+  geom_line(aes(x = date, y = Temp, colour=Type)) + 
+    xlab('Date') + 
+    ylab('Air Temperature (C)') + 
+    labs(title = 'Temperature -  2017',subtitle = 'Data retrieved from Kansas Mesonet', color = 'Type') 
+  
+  
+temp_plot2_2017
+ggsave(filename = '../output/temp_plot2_2017.png',plot = temp_plot2_2017, dpi= 300,
+       width = 10, height = 5)
+```
+##RAINGRAP2017_BIEN
+
+```{r}
+rainfall_plot_2017 <- ggplot(mhk_2017) + 
+  geom_col(aes(x = date, y = Precipitation)) + 
+    xlab('Date') + 
+    ylab('Precipitation (mm)') +
+    labs(title = 'Rainfall -  2017',
+         subtitle = 'Data retrieved from Kansas Mesonet', 
+         color = 'Type') 
+  
+  
+  
+rainfall_plot_2017
+ggsave(filename = '../output/pp_plot2_2017.png',plot = rainfall_plot_2017, 
+       width = 10,height = 5)
+rainfall_plot_2017
+```
+
+temperatura 
+
+```{r}
+
+temp_joined <- bind_rows(mhk_2017,mhk_2018,mhk_2019,
+                             mhk_2020,mhk_2021,mhk_2022) %>%
+  mutate(year = year(date),
+         doy =  yday(date))
+
+
+rainfall_plot_years <- ggplot(temp_joined) + 
+  geom_col(aes(x = doy, y = Precipitation)) + 
+    xlab('DOY') + 
+    ylab('Precipitation (mm)') +
+    labs(title = 'Precipitation',
+         subtitle = 'Data retrieved from Kansas Mesonet', 
+         color = 'Type') +
+  facet_wrap(~year)
+
+ggsave(filename = '../output/pp_plot_years.png',plot = rainfall_plot_years, 
+       width = 10,height = 5)
+rainfall_plot_years
+```
+
+```{r}
+
+temp_plot_years <- temp_joined %>%
+  dplyr::select(doy,year, AirTemperature_max, AirTemperature_min, AirTemperature_mean) %>%
+  pivot_longer(cols = c(AirTemperature_max, AirTemperature_min, AirTemperature_mean),
+    names_to = "Type",
+    values_to = "PP") %>%
+  ggplot() + 
+  geom_line(aes(x = doy, y = PP, colour=Type)) + 
+    xlab('DOY') + 
+    ylab('Temperature (C)') +
+    labs(title = 'Temperature',
+         subtitle = 'Data retrieved from Kansas Mesonet', 
+         color = 'Type') +
+  facet_wrap(~year)
+
+ggsave(filename = '../output/temp_plot_years.png',plot = temp_plot_years, 
+       width = 10,height = 5)
+temp_plot_years
+```
+
+
+
+
+
+
+
+##EVI_2MANEJOS
+```{r}
+EVI_M1_M2 <- read_csv("../data/EVI_M1_M2.csv", 
+    col_types = cols(DATE = col_date(format = "%m/%d/%Y"))) %>%
+  ggplot() +
+  geom_line(aes(x= DATE, y= EVI,colour=POLY)) +
+  facet_wrap(~POLY,nrow = 2,ncol = 1) +
+  labs(title = 'EVI depending management',subtitle = '2017 to 2022')
+  
+EVI_M1_M2
+ggsave(filename = '../output/EVI_M1_M2.png',plot = EVI_M1_M2, dpi= 300,
+       width = 10, height = 5)
+```
+
+
+

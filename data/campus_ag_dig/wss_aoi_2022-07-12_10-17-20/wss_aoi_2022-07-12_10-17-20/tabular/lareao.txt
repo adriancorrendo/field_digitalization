@@ -1,0 +1,5 @@
+"Climate Factor Area (USLE)"|"15"|"Climate Factor"||"10755"|"495982"
+"County or Parish"|"KS161"|"Riley"|398400|"10755"|"495983"
+"MLRA"|"76"|"Bluestem Hills"|398400|"10755"|"495984"
+"Rainfall Factor Area (USLE)"|"200"|"Rainfall Factor"||"10755"|"495985"
+"State or Territory"|"KS"|"Kansas"||"10755"|"495986"

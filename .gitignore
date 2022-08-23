@@ -1,0 +1,6 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+data/campus_ag_dig/topography/*
+data/campus_ag_dig/soil/*
