@@ -1,0 +1,6 @@
+"3919"|"Smolan silt loam, 1 to 3 percent slopes"|"Consociation"||3546|||||||"All areas are prime farmland"|||||"Order 2"||||||"10755"|"1472292"
+"3923"|"Smolan silty clay loam, 3 to 7 percent slopes, eroded"|"Consociation"||1703|||||||"Farmland of statewide importance"|||||"Order 2"||||||"10755"|"1472294"
+"4050"|"Ivan and Kennebec silt loams, occasionally flooded"|"Undifferentiated group"||12285|||||||"All areas are prime farmland"|||||"Order 2"||||||"10755"|"1472296"
+"4400"|"Kahola silt loam, rarely flooded"|"Consociation"||164|||||||"All areas are prime farmland"|||||"Order 2"||||||"10755"|"1472303"
+"7170"|"Reading silt loam, rarely flooded"|"Consociation"||10759|||||||"All areas are prime farmland"|||||"Order 2"||||||"10755"|"1472328"
+"7174"|"Reading silt loam, 1 to 3 percent slopes"|"Consociation"||6270|||||||"All areas are prime farmland"|||||"Order 2"||||||"10755"|"1472330"

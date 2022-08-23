@@ -1,0 +1,21 @@
+"Non-MLRA Soil Survey Area"|"KS161"|"Riley County, Kansas"||01/01/1970 00:00:00|"certified, all components"|09/10/2021 21:24:27|"KS161
+1.	The ""4010 1lf1d-Carr-Sarpy complex, occasionally flooded"" mapunit was combined with the ""4010 2zt5z-Carr-Sarpy complex, occasionally flooded"" map unit as a result of the ""EVAL - MLRA 76 - 4010 Carr-Sarpy complex, occasionally flooded"" EVAL project"".
+2.	The ""7740 1lf2y-Haynie silt loam, frequently flooded"" mapunit was combined with the ""7740 2zt68-Haynie silt loam, frequently flooded"" map unit as a result of the ""EVAL - MLRA 76 - 7740 Haynie silt loam, frequently flooded"" EVAL project"".
+The tabular database was edited and populated according to guidance in Exhibits A and B of National Instruction (NI-305), and Part 610 of the National Soil Survey Handbook. Any spatial data edits were certified correct by the Soil Survey region GIS specialist, State Soil Scientist (SSS), and by the National Digitizing Center. The SSS certified the data population for all map units, and concurred with correlation of all projects mentioned, as they were documented in Soil Survey Area Legend(s), and in the Project Correlation tables.
+The SSS certified the data population for all map units, and concurred with correlation of all projects mentioned, as they were documented in Soil Survey Area Legend(s) and in the Project Correlation table.
+This dataset also contains the following changes:
+A. Recalculated all national, regional, and local interpretations for all components.
+B. The dataset was populated with data elements needed to support the Water Erosion Prediction Project (WEPP).
+C. The eleven national interpretations listed below are new for Fiscal Year 2021 or revised:
+1.	AGR - Industrial Hemp for Fiber and Seed Production
+2.	DHS - Emergency Land Disposal of Milk
+3.	ENG - Deep Infiltration Systems
+4.	ENG - Lined Retention Systems
+5.	ENG - Shallow Infiltration Systems
+6.	ENG - Unlined Retention Systems
+7.	ENG - Ground-based Solar Arrays, Ballast Anchor Systems
+8.	ENG - Ground-based Solar Arrays, Soil-based Anchor Systems
+9.	FOR - Drought Vulnerable Soils
+10.	SOH - Dynamic Soil Properties Response to Biochar
+11.	SOH - Limitations for Aerobic Soil Organisms
+"|"10755"|"76587"|"76489"

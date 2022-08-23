@@ -2,5 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
-data/campus_ag_dig/topography/*
-data/campus_ag_dig/soil/*
+data/campus_ag_dig/topography/USGS_LPC_KS_SCentral_L2_2015_QJ0540_LAS_2017.laz
+data/campus_ag_dig/topography/USGS_LPC_KS_Statewide_2018_A18_14S_QJ_0540.laz
+data/campus_ag_dig/topography/USGS_13_n40w097_20210223.tif
