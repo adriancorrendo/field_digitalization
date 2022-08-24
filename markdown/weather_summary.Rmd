@@ -142,12 +142,12 @@ summary.daymet.nasapower <- function(input, intervals) {
                         function(x, y, data){
                           filter(data, Date >= x & Date < y)} ) )  %>% 
   
-  mutate(Weather = Weather %>% # User must addapt depending on the crop
+  mutate(Weather = Weather %>% # User must adapt depending on the crop
            map(~mutate(.,
                 # Ext. Prec. event
                 EPEi = case_when(PP>25~1, TRUE~0),
                 # Ext.Temp. event
-                ETEi = case_when(Tmax >= 33~1, TRUE~0), 
+                ETEi = case_when(Tmax >= 35~1, TRUE~0), 
                 # Tmax factor,  crop heat units (CHU)
                 Ymax = case_when(Tmax < 10~0, 
                             TRUE ~ 3.33*(Tmax-10)-0.084*(Tmax-10)),
@@ -160,8 +160,8 @@ summary.daymet.nasapower <- function(input, intervals) {
                 Gmin = case_when(Tmin >= 10 ~ Tmin, 
                             TRUE ~ 10),
                 # Tmax threshold Growing Degrees.
-                Gmax = case_when(Tmax <= 33 ~ Tmax, 
-                            TRUE ~ 33),
+                Gmax = case_when(Tmax <= 35 ~ Tmax, 
+                            TRUE ~ 35),
                 # Daily Growing Degree Units.
                 GDU = ((Gmin + Gmax)/2) - 10
                        ) ) ) %>% 
@@ -202,7 +202,8 @@ summary.daymet.nasapower <- function(input, intervals) {
 }
 ```
 
-## 03 Weather DigitalAg _ VER MESES EN FILTER!!
+## 03 Weather DigitalAg 
+
 ```{r warning=F, message=F}
 # Open file from excel if you have
 # data_table <- openxlsx::read.xlsx(xlsxFile = "my_file.xlsx", sheet = 1)
@@ -266,8 +267,11 @@ kbl(historical.summary.DigitalAg) %>%
 #View(historical.summary.DigitalAg)
 
 ```
-## Creating summaries
+
+
+## 04. Creating summaries(Annual, Summer, Winter, JulAug)
 ```{r}
+
 # A. Annual
 summary_annual <- 
   historical.summary.DigitalAg %>% 
@@ -281,11 +285,11 @@ summary_annual <-
            PP = PP / 25.4,
            Tmean = Tmean * 1.8 + 32)
 
-# B. Summer
+# B. Summer (April to September)
 summary_summer <- 
   historical.summary.DigitalAg %>% 
   # Filter months
-  dplyr::filter(Month %in% c(4:9)) %>% 
+  dplyr::filter(Month %in% c(4:9)) %>% #April to September
   group_by(ID, Year) %>% 
   summarise(PP = sum(PP), 
             Tmean = mean(Tmean),
@@ -296,11 +300,11 @@ summary_summer <-
            PP = PP / 25.4,
            Tmean = Tmean * 1.8 + 32)
 
-# C. Winter
+# C. Winter (October to April)
 summary_winter <- 
   historical.summary.DigitalAg %>% 
   # Filter months
-  dplyr::filter(Month %in% c(10,11,12,1,2,3,4)) %>% 
+  dplyr::filter(Month %in% c(10,11,12,1,2,3,4)) %>% #October to April
   group_by(ID, Year) %>% 
   summarise(PP = sum(PP), 
             Tmean = mean(Tmean),
@@ -312,12 +316,12 @@ summary_winter <-
            Tmean = Tmean * 1.8 + 32)
 
 
-# D. anomalies_JulAug
+# D. JulAug
 
 summary_JulAug <- 
   historical.summary.DigitalAg %>% 
   # Filter months
-  dplyr::filter(Month %in% c(7,8)) %>% 
+  dplyr::filter(Month %in% c(7,8)) %>% #july and august
   group_by(ID, Year) %>% 
   summarise(PP = sum(PP), 
             Tmean = mean(Tmean),
@@ -335,8 +339,11 @@ summary_JulAug <-
 
 ```
 
-## COMPLETEYEAR_DATA
+# 05. Anomalies_data
 ```{r}
+
+# A. Anomalies_classification_annual
+
 anomalies_annual <-
   summary_annual %>% 
   group_by(ID) %>% 
@@ -356,16 +363,71 @@ anomalies_annual <-
                  symb_point = ifelse(labyr != "Normal", "yes", "no") ) %>% 
 
 ungroup()
+
     
+# B.Anomalies_clasification_Summer
+
+anomalies_summer <-
+  summary_summer %>% 
+  group_by(ID) %>% 
+  mutate(PP_mean = mean(PP),
+         T_mean = mean(Tmean),
+         PP_anom = (PP*100/PP_mean)-100, 
+         T_anom = Tmean-T_mean,
+         labyr = case_when(PP_anom < -10 & T_anom < -.5 ~ "Dry & Cool",
+                           PP_anom < -10 & T_anom > .5 ~ "Dry & Warm",
+                           PP_anom > 10 & T_anom < -.5 ~ "Wet & Cool",
+                           PP_anom > 10 & T_anom > .5 ~ "Wet & Warm",
+                           between(PP_anom,-10,10) & T_anom < -.5 ~ "Normal & Cool",
+                           between(PP_anom,-10,10) & T_anom > .5 ~ "Normal & Warm",
+                           PP_anom < -10 & between(T_anom,-.5,.5) ~ "Dry & Normal",
+                           PP_anom > 10 & between(T_anom,-.5,.5) ~ "Wet & Normal",
+                           between(PP_anom,-10,10) & between(T_anom,-.5,.5) ~ "Normal"),
+                 symb_point = ifelse(labyr != "Normal", "yes", "no") ) %>% 
+
+ungroup()%>%
+    
+  mutate(T_anom_ext = case_when(T_anom < -2.5 | T_anom > 2.5 ~ "yes", TRUE ~ "no"), 
+  PP_anom_ext = case_when(PP_anom < -30 | PP_anom > 30 ~ "yes", TRUE ~ "no"), 
+  year_ext = case_when(PP_anom_ext == "yes" | T_anom_ext == "yes" ~ "yes",TRUE ~ "no"))  # I created these columns for use in the anomaly plot, when I need result extremes years. (ONLY SUMMER)
+
+
+
+# C. Anomalies_clasification_Winter
+
+anomalies_winter <-
+  summary_winter %>% 
+  group_by(ID) %>% 
+  mutate(PP_mean = mean(PP),
+         T_mean = mean(Tmean),
+         PP_anom = (PP*100/PP_mean)-100, 
+         T_anom = Tmean-T_mean,
+         labyr = case_when(PP_anom < -10 & T_anom < -.5 ~ "Dry & Cool",
+                           PP_anom < -10 & T_anom > .5 ~ "Dry & Warm",
+                           PP_anom > 10 & T_anom < -.5 ~ "Wet & Cool",
+                           PP_anom > 10 & T_anom > .5 ~ "Wet & Warm",
+                           between(PP_anom,-10,10) & T_anom < -.5 ~ "Normal & Cool",
+                           between(PP_anom,-10,10) & T_anom > .5 ~ "Normal & Warm",
+                           PP_anom < -10 & between(T_anom,-.5,.5) ~ "Dry & Normal",
+                           PP_anom > 10 & between(T_anom,-.5,.5) ~ "Wet & Normal",
+                           between(PP_anom,-10,10) & between(T_anom,-.5,.5) ~ "Normal"),
+                 symb_point = ifelse(labyr != "Normal", "yes", "no") ) %>% 
+
+ungroup()%>%
+    
+  mutate(T_anom_ext = case_when(T_anom < -3 | T_anom > 3 ~ "yes", TRUE ~ "no"), 
+   PP_anom_ext = case_when(PP_anom < -50 | PP_anom > 50 ~ "yes", TRUE ~ "no"), 
+   year_ext = case_when(PP_anom_ext == "yes" | T_anom_ext == "yes" ~ "yes",TRUE ~ "no")) #I created these columns for use in the anomaly plot, when I need result extremes years. (ONLY WINTER)
+
 
 ```
 
 
 
-#COMPLETE YEAR_ ANOMALY PLOT _ WEATHER ANOMALIES
+#06. Annual _ Anomaly plot 
 ```{r}
 
-plot_COMPLETE_anom_10 <- ggplot(data= anomalies_annual)+ 
+Anomalyplot_ANNUAL <- ggplot(data= anomalies_annual)+ 
     geom_point(aes(x=T_anom, y = PP_anom ), shape = 16, color= "black", size = 1)+
     geom_hline(yintercept = 0, linetype = "dashed")+
     geom_vline(xintercept = 0, linetype = "dashed")+
@@ -388,17 +450,16 @@ plot_COMPLETE_anom_10 <- ggplot(data= anomalies_annual)+
          subtitle = "Mean Temp= 54.8 ºF | Mean PP = 34.02 in",)+
     scale_x_continuous(limits=c(-3,3), breaks = seq(-3,3, by = 1))+
      scale_y_continuous(limits=c(-60,60), breaks=seq(-60,60, by = 20))+
-theme_bw(base_size = 12, base_family = "Verdana", base_line_size = 0.5, base_rect_size = 0.5)+
+theme_bw(base_size = 12, base_family = "", base_line_size = 0.5, base_rect_size = 0.5)+
     theme(panel.grid.major = element_blank())
     
-plot_COMPLETE_anom_10
+Anomalyplot_ANNUAL
     
 
-##GUARDAR
+#SAVE
 
-ggsave(plot = plot_COMPLETE_anom_10,
-       filename = paste0('../DigitalAg_Field_Project/output/V2/',
-                         'plot_COMPLETE_anom_10','.png'),
+ggsave(plot = Anomalyplot_ANNUAL,
+         filename = paste0('../output/V3/Anomalyplot_ANNUAL.png'),
        device='png',
        width = 23,height = 17,units = 'cm')
 
@@ -406,116 +467,56 @@ ggsave(plot = plot_COMPLETE_anom_10,
 
 ```
 
-##COMPLETE_ EXTREME PP PLOT
+# 07. Annual_Extreme precipitation events
 ```{r}
 
-# NO USO!!
-### PLOT DE ExTE _ CANTIDAD DE DIAS QUE SUPERAN CIERTA TEMPERATURA (arriba se calculo ETE y EPE, se determino +30 grados centigrados y lluvias de + de 20 mm)
+## PLOT Extreme precipitation events    
 
-#plot_COMPLETE_EXTTEMP <- DigitalAg.hist.PP.Temp %>% 
-  #group_by(ID) %>% 
- # mutate(ETE_av = mean(ETE)) %>% ungroup() %>% 
- # ggplot(aes(x=Year, y = ETE))+
- # geom_col()+
- # geom_hline(aes(yintercept = ETE_av))+
- #   labs(x='Year', y= 'Number of extreme temperature')+
- #   ggtitle ("Extreme temperature - 1982 to 2021")
-#
-#ggsave(plot = plot_COMPLETE_EXTTEMP,
-     #  filename = paste0('../DigitalAg_Field_Project/output/V2/',
-                        # ' plot_COMPLETE_EXTTEMP','.png'),
-      # device='png',
-     #  width = 17,height = 10,units = 'cm')
-
-
-
-## PLOT ExPP     
-
-plot_COMPLETE_EXTPP <- anomalies_annual %>% 
+Barplot_EPE_ANNUAL <- anomalies_annual %>% 
   group_by(ID) %>% 
   mutate(EPE_av = mean(EPE)) %>% ungroup() %>%
   mutate(paint = case_when(EPE > EPE_av ~ "yes",
-                           TRUE ~ "no")) %>% 
+                           TRUE ~ "no")) %>% #clasifico que barras pasan la media
   ggplot(aes(x=Year, y = EPE))+
-  geom_col(aes(fill = paint))+
-  scale_fill_manual(name = "", values = c("grey", "#118ab2"))+
-  scale_x_continuous(limits = c(1981, 2021), breaks = seq(1982, 2022, by = 2))+
-  geom_hline(aes(yintercept = EPE_av))+
-    labs(x='Year', y= 'Number of extreme precipitation')+
-    ggtitle ("Extreme precipitation - 1982 to 2021", subtitle = "ExPP: Number of days that exceed 1 in")+
-    theme_bw(base_size = 12, base_family = "Verdana", base_line_size = 0.5, base_rect_size = 0.5)+
+  geom_col(aes(fill = paint))+ #Pinto las barras que pasen la media
+  scale_fill_manual(name = "", values = c("grey", "#118ab2"))+ #Colorea las barras "no" de gris y "yes" de azul - (el c(x,x) esta en orden alfabetico)
+  scale_x_continuous(limits = c(1981, 2022), breaks = seq(1982, 2021, by = 3))+
+  scale_y_continuous(limits = c(0, 14), breaks = seq(0, 14, by = 2))+
+  geom_hline(aes(yintercept = EPE_av)) +
+  geom_text(aes(1981,9.2,label = "8.7", hjust = 1))+
+    labs(x='Year', y= 'EPE')+
+    ggtitle ("Extreme precipitation events - 1982 to 2021", subtitle = "EPE: Number of days that exceed 1 in.")+
+    theme_bw(base_size = 12, base_family = "", base_line_size = 0.5, base_rect_size = 0.5)+
     theme(panel.grid.major = element_blank(),
           axis.text.x = element_text(angle = 0),
-          legend.position = "none")
+          legend.position = "none" )
 
-plot_COMPLETE_EXTPP
+Barplot_EPE_ANNUAL
 
-#GUARDAR 
-ggsave(plot = plot_COMPLETE_EXTPP,
-       filename = paste0('../DigitalAg_Field_Project/output/V2/',
-                         ' plot_COMPLETE_EXTPP','.png'),
+#save
+ggsave(plot = Barplot_EPE_ANNUAL,
+       filename = paste0('../output/V3/Barplot_EPE_ANNUAL.png'),
        device='png',
        width = 25,height = 15, units = 'cm')
 
 
-```
-
-
-
-##SUMMER_DATA ANOMALY 
-```{r}
-anomalies_summer <-
-  summary_summer %>% 
-  group_by(ID) %>% 
-  mutate(PP_mean = mean(PP),
-         T_mean = mean(Tmean),
-         PP_anom = (PP*100/PP_mean)-100, 
-         T_anom = Tmean-T_mean,
-         labyr = case_when(PP_anom < -10 & T_anom < -.5 ~ "Dry & Cool",
-                           PP_anom < -10 & T_anom > .5 ~ "Dry & Warm",
-                           PP_anom > 10 & T_anom < -.5 ~ "Wet & Cool",
-                           PP_anom > 10 & T_anom > .5 ~ "Wet & Warm",
-                           between(PP_anom,-10,10) & T_anom < -.5 ~ "Normal & Cool",
-                           between(PP_anom,-10,10) & T_anom > .5 ~ "Normal & Warm",
-                           PP_anom < -10 & between(T_anom,-.5,.5) ~ "Dry & Normal",
-                           PP_anom > 10 & between(T_anom,-.5,.5) ~ "Wet & Normal",
-                           between(PP_anom,-10,10) & between(T_anom,-.5,.5) ~ "Normal"),
-                 symb_point = ifelse(labyr != "Normal", "yes", "no") ) %>% 
-
-ungroup()%>%
-    
-
-##PARA SUMMER CROPS / creo estas columnas para resaltar años extremos en SUMMER
-mutate(T_anom_ext = case_when(T_anom < -2.5 | T_anom > 2.5 ~ "yes", TRUE ~ "no"), 
-PP_anom_ext = case_when(PP_anom < -30 | PP_anom > 30 ~ "yes", TRUE ~ "no"), 
-year_ext = case_when(PP_anom_ext == "yes" | T_anom_ext == "yes" ~ "yes",TRUE ~ "no"))
-
-
-#View(DigitalAg.hist.PP.Temp)
-
-
 
 ```
 
 
 
 
-
-
-
-#SUMM_ ANOMALYPLOT _ 10 AÑOS
+# 08. Summer_ Anomaly plot _ last 10 years highlighted.
 ```{r}
 
-# Plot CON LOS PUNTOS DE LOS ULTIMOS 10 AÑOS RESALTADOS
+# Summer anomaly plot with the last 10 years highlighted.
 
-
-plot_summer_anom_10 <- ggplot(data= anomalies_summer)+ 
+Anomalyplot_SUMMER_last10y <- ggplot(data= anomalies_summer)+ 
 geom_point(aes(x=T_anom, y = PP_anom), shape = 16, size = 1.25)+
     geom_hline(yintercept = 0, linetype = "dashed")+
     geom_vline(xintercept = 0, linetype = "dashed")+
-    labs(x='Temp_Anom', y= 'Precip_Anom')+ 
-ggtitle("Weather anomalies", #PRESTAR ATENCION TITULOS
-       subtitle = "1982 to 2021 (Apr to Sept)")+ #PRESTAR ATENCION TITULOS
+    labs(x='Temperature Anomaly (%)', y= 'Precipitation Anomaly (%)')+ 
+ggtitle( "Weather anomalies 1982-2021 (April to September)", subtitle = "Mean Temp= 69.8 ºF | Mean PP= 24.8 in")+ #PRESTAR ATENCION TITULOS
 geom_label(aes(x = -2.5, y = 50, 
           label = "Wet & Cool"), 
           stat = "unique")+ #P/CAMBIAR DE POSICION ETIQ. DE CUADRANTE SUP-IZQ
@@ -528,26 +529,25 @@ geom_label(aes(x = 2.5, y = -65,
 geom_label(aes(x = 2.5, y = 50, 
                label = "Wet & Warm"),
            stat = "unique")+ #P/CAMBIAR DE POSICION ETIQ. DE CUADRANTE SUP-DER
-geom_point(data = DigitalAg.hist.PP.Temp %>%
+geom_point(data = anomalies_summer %>%
     dplyr::filter(Year %in% c(2012:2021)), #FILTRO Y RESALTO LOS ULTIMOS 10 AÑOS
     aes(x=T_anom, y = PP_anom, fill = as.factor(Year)),
           shape = 21, size = 3) + 
     labs(color='Year')+
-     labs(fill = "Last 10 years",  caption = "T_mean= 69.8 ºF | PP_mean= 24.8 in")+
+     labs(fill = "Last 10 years")+
     scale_x_continuous(limits=c(-4,4), breaks = seq(-4,4, by = 1))+
      scale_y_continuous(limits=c(-70,70), breaks=seq(-70,70, by = 35))+
 
     theme_bw(base_size = 12, base_family = "Verdana", base_line_size = 0.5, base_rect_size = 0.5)+
     theme(panel.grid.major = element_blank())
    
-plot_summer_anom_10 
+Anomalyplot_SUMMER_last10y 
     
 
-##GUARDAR
+##SAVE
 
-ggsave(plot = plot_summer_anom_10,
-       filename = paste0('../DigitalAg_Field_Project/output/V2/',
-                         'plot_summer_anom_10','.png'),
+ggsave(plot = Anomalyplot_SUMMER_last10y,
+       filename = paste0('../output/V3/Anomalyplot_SUMMER_last10y.png'),
        device='png',
        width = 25,height = 15,units = 'cm')
 
@@ -558,17 +558,16 @@ ggsave(plot = plot_summer_anom_10,
 
 
 
-
-#SUM _ type of year _ años extremos.      
+# 09. Summer_ Anomaly plot _ Extreme years highlighted.     
 ```{r}
 
-plot_summer_anom_extrem <- ggplot(data= anomalies_summer)+
+Anomalyplot_SUMMER_extremey <- ggplot(data= anomalies_summer)+
 geom_point(aes(x=T_anom, y = PP_anom), shape = 16, size = 1.25)+
 geom_hline(yintercept = 0, linetype = "dashed")+
 geom_vline(xintercept = 0, linetype = "dashed")+
-    labs(x='Temp_Anom', y= 'Precip_Anom')+ 
-ggtitle("Weather anomalies", #PRESTAR ATENCION TITULOS
-          subtitle = "1982 to 2021 (Apr to Sept)")+ #PRESTAR ATENCION TITULOS
+    labs(x='Temperature Anomaly (%)', y= 'Precipitation Anomaly (%)')+ 
+ggtitle("Weather anomalies 1982-2021 (Apr to Sept)", #PRESTAR ATENCION TITULOS
+          subtitle = "Mean Temp= 69.8 ºF | Mean PP = 24.8 in")+ #PRESTAR ATENCION TITULOS
 geom_label(aes(x = -2.5, y = 50, 
           label = "Wet & Cool"), 
           stat = "unique")+ #P/CAMBIAR DE POSICION ETIQ. DE CUADRANTE SUP-IZQ
@@ -581,133 +580,126 @@ geom_label(aes(x = 2.5, y = -65,
 geom_label(aes(x = 2.5, y = 50, 
                label = "Wet & Warm"),
            stat = "unique")+ #P/CAMBIAR DE POSICION ETIQ. DE CUADRANTE SUP-DER
-geom_point(data = DigitalAg.hist.PP.Temp %>%
+geom_point(data = anomalies_summer %>%
     dplyr::filter(year_ext %in% c("yes")), #FILTRO Y RESALTO LOS AÑOS EXTREMOS
       aes(x=T_anom, y = PP_anom, fill = as.factor(Year)),
           shape = 21, size = 3)+
-    labs(fill = "Extreme years",  caption = "T_mean= 69.8 ºF | PP_mean= 24.8 in")+
+    labs(fill = "Extreme years")+
         scale_x_continuous(limits=c(-4,4), breaks = seq(-4,4, by = 1))+
      scale_y_continuous(limits=c(-70,70), breaks=seq(-70,70, by = 35))+
 
-    theme_bw(base_size = 12, base_family = "Verdana", base_line_size = 0.5, base_rect_size = 0.5)+
+    theme_bw(base_size = 12, base_family = "", base_line_size = 0.5, base_rect_size = 0.5)+
     theme(panel.grid.major = element_blank())
 
 
-plot_summer_anom_extrem  
+Anomalyplot_SUMMER_extremey  
 
 ##guardar
 
-ggsave(plot = plot_summer_anom_extrem,
-       filename = paste0('../DigitalAg_Field_Project/output/V2/',
-                         'plot_summer_anom_extrem','.png'),
+ggsave(plot = Anomalyplot_SUMMER_extremey,
+       filename = paste0('../output/V3/Anomalyplot_SUMMER_extremey.png'),
        device='png',
        width = 25,height = 15,units = 'cm')
 
 ```
 
-
-#Sum_ EXTREME PLOT - TEMPERATURE: ONLY July and August - PRECIPITATION APRIL TO SEPT
+# 10. Summer _ Extreme Precipitation events (EPE)
 ```{r}
 
-# PLOT DE ExTE _ CANTIDAD DE DIAS QUE SUPERAN CIERTA TEMPERATURA (arriba se calculo ETE y EPE, se determino +33 grados centigrados y lluvias de + de 20 mm)
+# Plot Extreme PRECIPITATION - Summer (april to sept)  
 
-plot_JulyAug_EXTTEMP <- anomalies_JulAug %>% 
-  group_by(ID) %>% 
-  mutate(ETE_av = mean(ETE)) %>% ungroup() %>% 
-  ggplot(aes(x=Year, y = ETE))+
-  geom_col()+
-  geom_hline(aes(yintercept = ETE_av))+
-    labs(x='Year', y= 'ExTE')+
-    ggtitle ("Extreme temperature - 1982 to 2021 (Jul-Aug)", subtitle = "ExTE: Number of days with temperatures greater than 91.4 F")+
-theme_bw(base_size = 12, base_family = "Verdana", base_line_size = 0.5, base_rect_size = 0.5)+
-    theme(panel.grid.major = element_blank())
-
-plot_JulyAug_EXTTEMP
-
-ggsave(plot = plot_JulyAug_EXTTEMP,
-       filename = paste0('../DigitalAg_Field_Project/output/V2/',
-                         ' plot_JulyAug_EXTTEMP','.png'),
-       device='png',
-       width = 25,height = 15,units = 'cm')
-
-
-
-## PLOT ExPP  summer april to sept  
-
-plot_summer_EXTPP <-DigitalAg.hist.PP.Temp %>% 
+Barplot_EPE_SUMMER <-anomalies_summer %>% 
   group_by(ID) %>% 
   mutate(EPE_av = mean(EPE)) %>% ungroup() %>% 
+  mutate(paint = case_when(EPE > EPE_av ~ "yes",
+                           TRUE ~ "no")) %>% #clasifico que barras pasan la media
   ggplot(aes(x=Year, y = EPE))+
-  geom_col()+
-  geom_hline(aes(yintercept = EPE_av))+
-    labs(x='Year', y= 'Number of extreme precipitation')+
-    ggtitle ("Extreme precipitation - 1982 to 2021 (Apr to Sept)", subtitle = "ExPP: Number of days that exceed 1 in")+
-    theme_bw(base_size = 12, base_family = "Verdana", base_line_size = 0.5, base_rect_size = 0.5)+
-    theme(panel.grid.major = element_blank())
+  geom_col(aes(fill = paint))+ #Pinto las barras que pasen la media
+  scale_fill_manual(name = "", values = c("grey", "#118ab2"))+ #Colorea las barras "no" de gris y "yes" de azul - (el c(x,x) esta en orden alfabetico)
+  scale_x_continuous(limits = c(1981, 2022), breaks = seq(1982, 2021, by = 3))+
+  scale_y_continuous(limits = c(0, 14), breaks = seq(0, 14, by = 2))+
+  geom_hline(aes(yintercept = EPE_av)) +
+  geom_text(aes(1981,7.5,label = "7", hjust = 1))+
+    labs(x='Year', y= 'EPE')+
+    ggtitle ("Extreme precipitation events  1982-2021 (April to September)", subtitle = "EPE: Number of days that exceed 1 in.")+
+   
+    theme_bw(base_size = 12, base_family = "", base_line_size = 0.5, base_rect_size = 0.5)+
+    theme(panel.grid.major = element_blank(),     
+    axis.text.x = element_text(angle = 0),
+          legend.position = "none" )
 
 
-plot_summer_EXTPP
+Barplot_EPE_SUMMER
 
-## guardar
+#SAVE
 
-ggsave(plot = plot_summer_EXTPP,
-       filename = paste0('../DigitalAg_Field_Project/output/V2/',
-                         ' plot_summer_EXTPP','.png'),
+ggsave(plot = Barplot_EPE_SUMMER,
+       filename = paste0('../output/V3/Barplot_EPE_SUMMER.png'),
        device='png',
        width = 25,height = 15,units = 'cm')
 
-```
-
-
-## winter_ DATA ANOMALY 
-```{r warning=F, message=F}
-
-anomalies_winter <-
-  summary_winter %>% 
-  group_by(ID) %>% 
-  mutate(PP_mean = mean(PP),
-         T_mean = mean(Tmean),
-         PP_anom = (PP*100/PP_mean)-100, 
-         T_anom = Tmean-T_mean,
-         labyr = case_when(PP_anom < -10 & T_anom < -.5 ~ "Dry & Cool",
-                           PP_anom < -10 & T_anom > .5 ~ "Dry & Warm",
-                           PP_anom > 10 & T_anom < -.5 ~ "Wet & Cool",
-                           PP_anom > 10 & T_anom > .5 ~ "Wet & Warm",
-                           between(PP_anom,-10,10) & T_anom < -.5 ~ "Normal & Cool",
-                           between(PP_anom,-10,10) & T_anom > .5 ~ "Normal & Warm",
-                           PP_anom < -10 & between(T_anom,-.5,.5) ~ "Dry & Normal",
-                           PP_anom > 10 & between(T_anom,-.5,.5) ~ "Wet & Normal",
-                           between(PP_anom,-10,10) & between(T_anom,-.5,.5) ~ "Normal"),
-                 symb_point = ifelse(labyr != "Normal", "yes", "no") ) %>% 
-
-ungroup()%>%
-    
-##PARA WINTER CROPS / RESALTO LOS ANOS EXTREMOS.
-mutate(T_anom_ext = case_when(T_anom < -3 | T_anom > 3 ~ "yes", TRUE ~ "no"), 
-   PP_anom_ext = case_when(PP_anom < -50 | PP_anom > 50 ~ "yes", TRUE ~ "no"), 
-   year_ext = case_when(PP_anom_ext == "yes" | T_anom_ext == "yes" ~ "yes",TRUE ~ "no"))
-
-
-
-#View(DigitalAg.hist.PP.Temp)
-
-
-
 
 ```
 
 
 
-# WIN _ ANOMALY PLOT 10 AÑOS
+# 11. July-Aug _ Extreme Temperature events
+
 ```{r}
 
-plot_winter_anom_10 <- ggplot(data= anomalies_winter)+ 
+# PLOT Extreme TEMPERATURE events _ CANTIDAD DE DIAS QUE SUPERAN CIERTA TEMPERATURA (arriba se calculo ETE y EPE, se determino +35 C o +95 F y lluvias de + de 20 mm)
+
+Barplot_ETE_JulyAug <- summary_JulAug %>% 
+  group_by(ID) %>% 
+  mutate(ETE_av = mean(ETE)) %>% ungroup() %>% 
+   mutate(paint = case_when(ETE > ETE_av ~ "yes",
+            TRUE ~ "no")) %>%
+  ggplot(aes(x=Year, y = ETE))+
+  geom_col(aes(fill = paint))+ #Pinto las barras que pasen la media
+  scale_fill_manual(name = "", values = c("grey", "#993333"))+ #Colorea las barras "no" de gris y "yes" de Rojo - (el c(x,x) esta en orden alfabetico)
+  scale_x_continuous(limits = c(1981, 2022), breaks = seq(1982, 2021, by = 3))+
+  scale_y_continuous(limits = c(0, 40), breaks = seq(0, 40, by = 5))+
+  geom_hline(aes(yintercept = ETE_av)) +
+  geom_text(aes(1982.3,16,label = "14.8", hjust = 1))+
+    labs(x='Year', y= 'ETE')+
+    ggtitle ("Extreme temperature events 1982-2021 (Jul-Aug)", subtitle = "ETE: Number of days with temperatures greater than 95 ºF")+
+theme_bw(base_size = 12, base_family = "", base_line_size = 0.5, base_rect_size = 0.5)+
+ theme(panel.grid.major = element_blank(),     
+    axis.text.x = element_text(angle = 0),
+          legend.position = "none" )
+
+Barplot_ETE_JulyAug
+
+#save
+ggsave(plot = Barplot_ETE_JulyAug,
+       filename = paste0('../output/V3/Barplot_ETE_JulyAug.png'),
+       device='png',
+       width = 25,height = 15,units = 'cm')
+
+
+
+
+
+
+
+#993333
+
+```
+
+
+
+# 12. Winter_ Anomaly plot _ Last 10 years highlighted
+```{r}
+
+# Anomaly plot - winter (October to April) with last 10 years highlighted
+
+Anomalyplot_WINTER_last10y <- ggplot(data= anomalies_winter)+ 
 geom_point(aes(x=T_anom, y = PP_anom), shape = 16, size = 1.25)+
 geom_hline(yintercept = 0, linetype = "dashed")+
 geom_vline(xintercept = 0, linetype = "dashed")+
-    labs(x='Temp_Anom', y= 'Precip_Anom')+
-ggtitle("Weather anomalies",
-          subtitle = "1982 to 2021 (Oct to Apr)")+
+    labs(x='Temperature Anomaly (%)', y= 'Precipitation Anomaly (%)')+
+ggtitle("Weather anomalies 1982-2021 (Oct to Apr)",
+          subtitle = "Mean Temp = 41.8 ºF | Mean PP = 12.28 in")+
 geom_label(aes(x = -2.5, y = 40,
                 label = "Wet & Cool"),
             stat = "unique")+
@@ -720,20 +712,21 @@ geom_label(aes(x = 2.5, y = -50,
 geom_label(aes(x = 2.5, y = 40,
                 label = "Wet & Warm"),
             stat = "unique")+
-   geom_point(data = DigitalAg.hist.PP.Temp %>%
+   geom_point(data = anomalies_winter %>%
 dplyr::filter(Year %in% c(2012:2021)), 
      aes(x=T_anom, y = PP_anom, fill = as.factor(Year)),
 shape = 21, size = 3)  + 
-labs(fill = "Last 10 years", caption = "T_mean= 41.8 ºF | PP_mean= 12.28 in" )+
+labs(fill = "Last 10 years" )+
    
     scale_x_continuous(limits=c(-4,4), breaks = seq(-4,4, by = 1))+
      scale_y_continuous(limits=c(-70,70), breaks=seq(-70,70, by = 35))+
-    theme_bw(base_size = 12, base_family = "Verdana", base_line_size = 0.5, base_rect_size = 0.5)+
+    theme_bw(base_size = 12, base_family = "", base_line_size = 0.5, base_rect_size = 0.5)+
     theme(panel.grid.major = element_blank())
 
- 
+Anomalyplot_WINTER_last10y
 
-plot_winter_anom_10
+
+
 
 #para agregar texto en el medio del grafico ("text", posicion y el texto)
 #     annotate("text", x = 4, y = 70, label = "T_mean= 41.8 ºF | PP_mean= 12.28 in")
@@ -741,26 +734,26 @@ plot_winter_anom_10
 
 ##GUARDAR
 
-ggsave(plot = plot_winter_anom_10,
-       filename = paste0('../DigitalAg_Field_Project/output/V2/',
-                         'plot_winter_anom_10','.png'),
+ggsave(plot = Anomalyplot_WINTER_last10y,
+       filename = paste0('../output/V3/Anomalyplot_WINTER_last10y.png'),
        device='png',
        width = 25,height = 15,units = 'cm') 
     
 ```
 
 
-#WIN_ ANOMALYPLOT_ AÑOS EXTREMOS
+# 13. Winter_ Anomaly plot _ Extreme years highlighted
 
 ```{r}
+# Anomaly plot - winter (October to April) with extreme years highlighted
 
-plot_winter_anom_extrem <- ggplot(data= anomalies_winter)+ 
+Anomalyplot_WINTER_extremey <- ggplot(data= anomalies_winter)+ 
 geom_point(aes(x=T_anom, y = PP_anom), shape = 16, size = 1.25)+
 geom_hline(yintercept = 0, linetype = "dashed")+
 geom_vline(xintercept = 0, linetype = "dashed")+
-    labs(x='Temp_Anom', y= 'Precip_Anom')+
-ggtitle("Weather anomalies",
-          subtitle = "1982 to 2021 (Oct to Apr)")+
+    labs(x='Temperature Anomaly (%)', y= 'Precipitation Anomaly (%)')+
+ggtitle("Weather anomalies 1982-2021 (Oct to Apr)",
+          subtitle = "T_mean= 41.8 ºF | PP_mean= 12.28 in")+
 geom_label(aes(x = -2.5, y = 40,
                 label = "Wet & Cool"),
             stat = "unique")+
@@ -773,52 +766,58 @@ geom_label(aes(x = 2.5, y = -40,
 geom_label(aes(x = 2.5, y = 40,
                 label = "Wet & Warm"),
             stat = "unique")+
-  geom_point(data = DigitalAg.hist.PP.Temp %>%
+  geom_point(data = anomalies_winter %>%
     dplyr::filter(year_ext %in% c("yes")), #FILTRO Y RESALTO LOS AÑOS EXTREMOS
       aes(x=T_anom, y = PP_anom, fill = as.factor(Year)),
           shape = 21, size = 3)+
-    labs(fill = "Extreme years", caption = "T_mean= 41.8 ºF | PP_mean= 12.28 in")+
+    labs(fill = "Extreme years")+
     scale_x_continuous(limits=c(-4,4), breaks = seq(-4,4, by = 1))+ #LIMITE DE LA ESCALA X, Y DE LOS LIMITES CADA CUANTO SE CORTA. EJ CADA 1.
      scale_y_continuous(limits=c(-70,70), breaks=seq(-70,70, by = 35))+ #LIMITES Y DE LOS LIMITES CADA CUANTO CORTA, EJ 35.
-    theme_bw(base_size = 12, base_family = "Verdana", base_line_size = 0.5, base_rect_size = 0.5)+
-    theme(panel.grid.major = element_blank()) #TAMAÑO DE LETRAS, TIPO DE LETRA, Y GROSOR DE LAS LINEAS X E Y
+    theme_bw(base_size = 12, base_family = "", base_line_size = 0.5, base_rect_size = 0.5)+
+        theme(panel.grid.major = element_blank()) #TAMAÑO DE LETRAS, TIPO DE LETRA, Y GROSOR DE LAS LINEAS X E Y
  
-plot_winter_anom_extrem                   
+Anomalyplot_WINTER_extremey                   
                   
 ##GUARDAR
 
-ggsave(plot = plot_winter_anom_extrem,
-       filename = paste0('../DigitalAg_Field_Project/output/V2/',
-                         'plot_winter_anom_extrem','.png'),
+ggsave(plot = Anomalyplot_WINTER_extremey,
+       filename = paste0('../output/V3/Anomalyplot_WINTER_extremey.png'),
        device='png',
        width = 25,height = 15,units = 'cm') 
     
 ```
 
-#WIN_ extreme precipitarion    
+# 14. Winter _ Extreme Precipitation events
 ```{r}
 
+# Bar plot EPE _ Extreme precipitation events.
 
-# plot expp
-
-plot_winter_EXTPP <-anomalies_winter %>% 
+Barplot_EPE_WINTER <-anomalies_winter %>% 
   group_by(ID) %>% 
   mutate(EPE_av = mean(EPE)) %>% ungroup() %>% 
+  mutate(paint = case_when(EPE > EPE_av ~ "yes",
+                           TRUE ~ "no")) %>% #clasifico que barras pasan la media
   ggplot(aes(x=Year, y = EPE))+
-  geom_col()+
-  geom_hline(aes(yintercept = EPE_av))+
-  labs(x='Year', y= 'Number of extreme precipitation')+
-    ggtitle ("Extreme precipitation - 1982 to 2021 (Oct to Apr)", subtitle = "ExPP: Number of days that exceed 1 in")+
-    theme_bw(base_size = 12, base_family = "Verdana", base_line_size = 0.5, base_rect_size = 0.5)+
-    theme(panel.grid.major = element_blank())
+  geom_col(aes(fill = paint))+ #Pinto las barras que pasen la media
+  scale_fill_manual(name = "", values = c("grey", "#118ab2"))+ #Colorea las barras "no" de gris y "yes" de azul - (el c(x,x) esta en orden alfabetico)
+    scale_x_continuous(limits = c(1981, 2022), breaks = seq(1982, 2021, by = 3))+
+  scale_y_continuous(limits = c(0, 6), breaks = seq(0, 6, by = 1))+
+  geom_hline(aes(yintercept = EPE_av)) +
+  geom_text(aes(1981,2.5,label = "2.4", hjust = 1))+
+  labs(x='Year', y= 'EPE')+
+    ggtitle ("Extreme precipitation events - 1982 to 2021 (Oct to Apr)", subtitle = "EPE: Number of days that exceed 1 in")+
+    theme_bw(base_size = 12, base_family = "", base_line_size = 0.5, base_rect_size = 0.5)+
+    theme(panel.grid.major = element_blank(),
+          axis.text.x = element_text(angle = 0),
+          legend.position = "none" )
 
 
-plot_winter_EXTPP
+Barplot_EPE_WINTER
 
-##guardar
-ggsave(plot = plot_winter_EXTPP,
-       filename = paste0('../DigitalAg_Field_Project/output/V2/',
-                         ' plot_winter_EXTPP','.png'),
+
+# save
+ggsave(plot = Barplot_EPE_WINTER,
+       filename = paste0('../output/V3/Barplot_EPE_WINTER.png'),
        device='png',
        width = 25,height = 15,units = 'cm')
 
