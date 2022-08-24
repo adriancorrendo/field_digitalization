@@ -566,7 +566,7 @@ geom_point(aes(x=T_anom, y = PP_anom), shape = 16, size = 1.25)+
 geom_hline(yintercept = 0, linetype = "dashed")+
 geom_vline(xintercept = 0, linetype = "dashed")+
     labs(x='Temperature Anomaly (%)', y= 'Precipitation Anomaly (%)')+ 
-ggtitle("Weather anomalies 1982-2021 (Apr to Sept)", #PRESTAR ATENCION TITULOS
+ggtitle("Weather anomalies 1982-2021 (April to September)", #PRESTAR ATENCION TITULOS
           subtitle = "Mean Temp= 69.8 ºF | Mean PP = 24.8 in")+ #PRESTAR ATENCION TITULOS
 geom_label(aes(x = -2.5, y = 50, 
           label = "Wet & Cool"), 
@@ -615,7 +615,7 @@ Barplot_EPE_SUMMER <-anomalies_summer %>%
                            TRUE ~ "no")) %>% #clasifico que barras pasan la media
   ggplot(aes(x=Year, y = EPE))+
   geom_col(aes(fill = paint))+ #Pinto las barras que pasen la media
-  scale_fill_manual(name = "", values = c("grey", "#118ab2"))+ #Colorea las barras "no" de gris y "yes" de azul - (el c(x,x) esta en orden alfabetico)
+  scale_fill_manual(name = "", values = c("grey", "#023e8a"))+ #Colorea las barras "no" de gris y "yes" de azul - (el c(x,x) esta en orden alfabetico)
   scale_x_continuous(limits = c(1981, 2022), breaks = seq(1982, 2021, by = 3))+
   scale_y_continuous(limits = c(0, 14), breaks = seq(0, 14, by = 2))+
   geom_hline(aes(yintercept = EPE_av)) +
@@ -662,7 +662,7 @@ Barplot_ETE_JulyAug <- summary_JulAug %>%
   geom_hline(aes(yintercept = ETE_av)) +
   geom_text(aes(1982.3,16,label = "14.8", hjust = 1))+
     labs(x='Year', y= 'ETE')+
-    ggtitle ("Extreme temperature events 1982-2021 (Jul-Aug)", subtitle = "ETE: Number of days with temperatures greater than 95 ºF")+
+    ggtitle ("Extreme temperature events 1982-2021 (July and August)", subtitle = "ETE: Number of days with temperatures greater than 95 ºF")+
 theme_bw(base_size = 12, base_family = "", base_line_size = 0.5, base_rect_size = 0.5)+
  theme(panel.grid.major = element_blank(),     
     axis.text.x = element_text(angle = 0),
@@ -698,7 +698,7 @@ geom_point(aes(x=T_anom, y = PP_anom), shape = 16, size = 1.25)+
 geom_hline(yintercept = 0, linetype = "dashed")+
 geom_vline(xintercept = 0, linetype = "dashed")+
     labs(x='Temperature Anomaly (%)', y= 'Precipitation Anomaly (%)')+
-ggtitle("Weather anomalies 1982-2021 (Oct to Apr)",
+ggtitle("Weather anomalies 1982-2021 (October to April)",
           subtitle = "Mean Temp = 41.8 ºF | Mean PP = 12.28 in")+
 geom_label(aes(x = -2.5, y = 40,
                 label = "Wet & Cool"),
@@ -752,7 +752,7 @@ geom_point(aes(x=T_anom, y = PP_anom), shape = 16, size = 1.25)+
 geom_hline(yintercept = 0, linetype = "dashed")+
 geom_vline(xintercept = 0, linetype = "dashed")+
     labs(x='Temperature Anomaly (%)', y= 'Precipitation Anomaly (%)')+
-ggtitle("Weather anomalies 1982-2021 (Oct to Apr)",
+ggtitle("Weather anomalies 1982-2021 (October to April)",
           subtitle = "T_mean= 41.8 ºF | PP_mean= 12.28 in")+
 geom_label(aes(x = -2.5, y = 40,
                 label = "Wet & Cool"),
@@ -805,7 +805,7 @@ Barplot_EPE_WINTER <-anomalies_winter %>%
   geom_hline(aes(yintercept = EPE_av)) +
   geom_text(aes(1981,2.5,label = "2.4", hjust = 1))+
   labs(x='Year', y= 'EPE')+
-    ggtitle ("Extreme precipitation events - 1982 to 2021 (Oct to Apr)", subtitle = "EPE: Number of days that exceed 1 in")+
+    ggtitle ("Extreme precipitation events - 1982 to 2021 (October to April)", subtitle = "EPE: Number of days that exceed 1 in")+
     theme_bw(base_size = 12, base_family = "", base_line_size = 0.5, base_rect_size = 0.5)+
     theme(panel.grid.major = element_blank(),
           axis.text.x = element_text(angle = 0),
